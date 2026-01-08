@@ -21,6 +21,16 @@ class Container {
 
     // Initialize
     this.init()
+
+    // Automatic resizing
+    this.setupResizeObserver()
+  }
+
+  setupResizeObserver() {
+    this.resizeObserver = new ResizeObserver(() => {
+      this.updateSizeFromDOM()
+    })
+    this.resizeObserver.observe(this.element)
   }
 
   addChild(child) {
@@ -59,66 +69,65 @@ class Container {
   }
 
   updateSizeFromDOM() {
-    // Wait for next frame to ensure DOM layout is complete
-    requestAnimationFrame(() => {
-      const rect = this.element.getBoundingClientRect()
-      let newWidth = Math.ceil(rect.width)
-      let newHeight = Math.ceil(rect.height)
+    // No extra RAF needed if called from ResizeObserver, 
+    // but useful for manual calls to ensure DOM state
+    const rect = this.element.getBoundingClientRect()
+    let newWidth = Math.ceil(rect.width)
+    let newHeight = Math.ceil(rect.height)
 
-      // Apply type-specific sizing logic
-      if (this.type === 'circle') {
-        // For circles, ensure perfect square
-        const size = Math.max(newWidth, newHeight)
-        newWidth = size
-        newHeight = size
-        this.borderRadius = size / 2 // 50% for perfect circle
+    // Apply type-specific sizing logic
+    if (this.type === 'circle') {
+      // For circles, ensure perfect square
+      const size = Math.max(newWidth, newHeight)
+      newWidth = size
+      newHeight = size
+      this.borderRadius = size / 2 // 50% for perfect circle
 
-        // Force exact square dimensions
-        this.element.style.width = size + 'px'
-        this.element.style.height = size + 'px'
-        this.element.style.borderRadius = this.borderRadius + 'px'
-      } else if (this.type === 'pill') {
-        // For pills, border radius is half the height
-        this.borderRadius = newHeight / 2
-        this.element.style.borderRadius = this.borderRadius + 'px'
+      // Force exact square dimensions
+      this.element.style.width = size + 'px'
+      this.element.style.height = size + 'px'
+      this.element.style.borderRadius = this.borderRadius + 'px'
+    } else if (this.type === 'pill') {
+      // For pills, border radius is half the height
+      this.borderRadius = newHeight / 2
+      this.element.style.borderRadius = this.borderRadius + 'px'
+    }
+
+    if (newWidth !== this.width || newHeight !== this.height) {
+      this.width = newWidth
+      this.height = newHeight
+
+      // Update canvas size to match actual DOM size
+      this.canvas.width = newWidth
+      this.canvas.height = newHeight
+      this.canvas.style.width = newWidth + 'px'
+      this.canvas.style.height = newHeight + 'px'
+      this.canvas.style.borderRadius = this.borderRadius + 'px'
+
+      // Update WebGL viewport if initialized
+      if (this.gl_refs.gl) {
+        this.gl_refs.gl.viewport(0, 0, newWidth, newHeight)
+        this.gl_refs.gl.uniform2f(this.gl_refs.resolutionLoc, newWidth, newHeight)
+        this.gl_refs.gl.uniform1f(this.gl_refs.borderRadiusLoc, this.borderRadius)
       }
 
-      if (newWidth !== this.width || newHeight !== this.height) {
-        this.width = newWidth
-        this.height = newHeight
+      // Update any nested glass children when container size changes
+      this.children.forEach(child => {
+        if (child instanceof Button && child.isNestedGlass && child.gl_refs.gl) {
+          const gl = child.gl_refs.gl
 
-        // Update canvas size to match actual DOM size
-        this.canvas.width = newWidth
-        this.canvas.height = newHeight
-        this.canvas.style.width = newWidth + 'px'
-        this.canvas.style.height = newHeight + 'px'
-        this.canvas.style.borderRadius = this.borderRadius + 'px'
+          // Update child's texture to match new container size
+          gl.bindTexture(gl.TEXTURE_2D, child.gl_refs.texture)
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, newWidth, newHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
 
-        // Update WebGL viewport if initialized
-        if (this.gl_refs.gl) {
-          this.gl_refs.gl.viewport(0, 0, newWidth, newHeight)
-          this.gl_refs.gl.uniform2f(this.gl_refs.resolutionLoc, newWidth, newHeight)
-          this.gl_refs.gl.uniform1f(this.gl_refs.borderRadiusLoc, this.borderRadius)
-        }
-
-        // Update any nested glass children when container size changes
-        this.children.forEach(child => {
-          if (child instanceof Button && child.isNestedGlass && child.gl_refs.gl) {
-            const gl = child.gl_refs.gl
-
-            // Update child's texture to match new container size
-            gl.bindTexture(gl.TEXTURE_2D, child.gl_refs.texture)
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, newWidth, newHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
-
-            // Update child's uniforms
-            gl.uniform2f(child.gl_refs.textureSizeLoc, newWidth, newHeight)
-            if (child.gl_refs.containerSizeLoc) {
-              gl.uniform2f(child.gl_refs.containerSizeLoc, newWidth, newHeight)
-            }
+          // Update child's uniforms
+          gl.uniform2f(child.gl_refs.textureSizeLoc, newWidth, newHeight)
+          if (child.gl_refs.containerSizeLoc) {
+            gl.uniform2f(child.gl_refs.containerSizeLoc, newWidth, newHeight)
           }
-        })
-      }
-    })
+        }
+      })
+    }
   }
 
   init() {
@@ -154,10 +163,12 @@ class Container {
     this.canvas.style.left = '0'
     this.canvas.style.width = '100%'
     this.canvas.style.height = '100%'
-    this.canvas.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.25)'
     this.canvas.style.zIndex = '-1' // Canvas behind children
 
     this.element.appendChild(this.canvas)
+
+    // Add high-quality shadows to the main element instead of the canvas
+    this.element.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1), 0 30px 60px rgba(0, 0, 0, 0.25)'
   }
 
   setupCanvas() {

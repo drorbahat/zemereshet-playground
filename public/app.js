@@ -18,14 +18,151 @@ window.addEventListener('load', () => {
         container.element.style.padding = '40px';
         container.element.style.margin = '0 auto';
 
-        // --- Add Input Field (Custom HTML inside container) ---
+        // --- Add Search Input Field ---
         const inputWrapper = document.createElement('div');
-        inputWrapper.id = 'input-container'; // ID for easier CSS targeting
+        inputWrapper.id = 'input-container';
         inputWrapper.className = 'input-group';
+        inputWrapper.style.position = 'relative'; // For absolute positioning of results
         inputWrapper.innerHTML = `
-            <input type="text" id="songUrl" placeholder="הכנס קישור לשיר מזמרשת..." class="glass-input">
+            <input type="text" id="songUrl" placeholder="חפש שיר או הדבק קישור..." class="glass-input" autocomplete="off">
+            <div id="search-results" class="search-results-glass" style="display: none;"></div>
+            <div id="search-spinner" class="spinner" style="display: none;"></div>
         `;
         container.element.appendChild(inputWrapper);
+
+        // Search Logic
+        const input = inputWrapper.querySelector('#songUrl');
+        const resultsDiv = inputWrapper.querySelector('#search-results');
+        const spinner = inputWrapper.querySelector('#search-spinner');
+        let debounceTimer;
+
+        // Hide results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!inputWrapper.contains(e.target)) {
+                resultsDiv.style.display = 'none';
+            }
+        });
+
+        // Search handler
+        input.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+
+            clearTimeout(debounceTimer);
+
+            if (query.length < 2) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            // If it looks like a URL, don't search
+            if (query.startsWith('http')) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                spinner.style.display = 'block';
+
+                try {
+                    const res = await fetch('http://localhost:3000/api/search', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query })
+                    });
+
+                    const data = await res.json();
+
+                    if (data.results && data.results.length > 0) {
+                        const highlight = (text, term) => {
+                            if (!text) return '';
+                            // Escape regex special chars
+                            const safeTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                            return text.replace(new RegExp(`(${safeTerm})`, 'gi'), '<span class="highlight">$1</span>');
+                        };
+
+                        resultsDiv.innerHTML = data.results.map((song, index) => {
+                            const hlTitle = highlight(song.title, query);
+                            const hlDesc = highlight(song.description || '', query);
+                            // Check if we actually found something to highlight
+                            const hasVisibleMatch = hlTitle.includes('span class="highlight"') || hlDesc.includes('span class="highlight"');
+
+                            return `
+                                <div class="search-result-item" data-url="${song.url}" data-index="${index}">
+                                    <div class="song-title">
+                                        ${hlTitle}
+                                        ${!hasVisibleMatch ? '<span class="match-badge">נמצא במילים</span>' : ''}
+                                    </div>
+                                    <div class="song-desc">${hlDesc}</div>
+                                </div>
+                            `;
+                        }).join('');
+
+                        resultsDiv.style.display = 'block';
+                        selectedIndex = -1; // Reset selection
+
+                        // Add click handlers
+                        resultsDiv.querySelectorAll('.search-result-item').forEach(item => {
+                            item.addEventListener('click', () => {
+                                selectResult(item);
+                            });
+                        });
+                    } else {
+                        resultsDiv.innerHTML = '<div class="search-no-results">לא נמצאו תוצאות</div>';
+                        resultsDiv.style.display = 'block';
+                    }
+                } catch (err) {
+                    console.error('Search error:', err);
+                } finally {
+                    spinner.style.display = 'none';
+                }
+            }, 200); // 200ms debounce for snappier feel
+        });
+
+        // Keyboard Navigation
+        let selectedIndex = -1;
+
+        function selectResult(item) {
+            if (!item) return;
+            input.value = item.dataset.url;
+            resultsDiv.style.display = 'none';
+            selectedIndex = -1;
+        }
+
+        function updateSelection() {
+            const items = resultsDiv.querySelectorAll('.search-result-item');
+            items.forEach((item, index) => {
+                if (index === selectedIndex) {
+                    item.classList.add('selected');
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        }
+
+        input.addEventListener('keydown', (e) => {
+            if (resultsDiv.style.display === 'none') return;
+
+            const items = resultsDiv.querySelectorAll('.search-result-item');
+            if (items.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = (selectedIndex + 1) % items.length;
+                updateSelection();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+                updateSelection();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (selectedIndex >= 0) {
+                    selectResult(items[selectedIndex]);
+                }
+            } else if (e.key === 'Escape') {
+                resultsDiv.style.display = 'none';
+            }
+        });
 
         // --- Create Nested Glass Button ---
         const downloadBtn = new LiquidGlass.Button({

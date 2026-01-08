@@ -80,12 +80,10 @@ h1 {
     /* Hybrid Approach: Native CSS Blur */
     backdrop-filter: blur(40px) saturate(140%);
     -webkit-backdrop-filter: blur(40px) saturate(140%);
-    background: rgba(255, 255, 255, 0.05);
-    /* Very subtle tint */
-    /* Layered shadow: sharp ambient occlusion + soft bloom */
-    box-shadow:
-        0 4px 6px rgba(0, 0, 0, 0.1),
-        0 30px 60px rgba(0, 0, 0, 0.25);
+    padding: 24px;
+    box-shadow: none;
+    /* Handled in JS */
+    transition: height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     /* Ensure WebGL canvas stays behind but visible for surface effects */
     z-index: 10;
 }
@@ -256,4 +254,123 @@ input[type="text"]:focus {
     color: white;
     font-weight: 600;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.highlight {
+    color: #ffd700;
+    /* Gold color */
+    font-weight: 800;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.match-badge {
+    display: inline-block;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-right: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 400;
+    vertical-align: middle;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* --- Search Results --- */
+.search-results-glass {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    margin-top: 12px;
+    background: rgba(40, 40, 40, 0.85);
+    /* Slightly darker for better readability */
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px;
+}
+
+.search-result-item {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 20px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.search-result-item:hover,
+.search-result-item.selected {
+    background: rgba(255, 255, 255, 0.15);
+    /* Slightly brighter for active/hover */
+    border-left: 4px solid var(--accent-color);
+    /* Add visual indicator */
+    padding-left: 16px;
+    /* Adjust padding for border */
+}
+
+.search-result-item .song-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.search-result-item .song-desc {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+}
+
+.search-no-results {
+    text-align: center;
+    padding: 24px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* --- Spinner --- */
+.spinner {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes spin {
+    to {
+        transform: translateY(-50%) rotate(360deg);
+    }
+}
+
+/* Scrollbar for results */
+.search-results-glass::-webkit-scrollbar {
+    width: 8px;
+}
+
+.search-results-glass::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.search-results-glass::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
 }
