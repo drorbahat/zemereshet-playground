@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מוריד זמרשת - Liquid Glass Playground</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- html2canvas for page capture (required by liquid-glass) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body>
+    <!-- Background Wallpaper -->
+    <div class="bg-container"></div>
+
+    <header>
+        <h1>מוריד זמרשת</h1>
+        <p class="subtitle">Liquid Glass v5 - True WebGL Refraction</p>
+    </header>
+
+    <main>
+        <!-- Liquid Glass Container will be injected here -->
+        <div id="glass-mount"></div>
+    </main>
+
+    <!-- Liquid Glass Library -->
+    <script src="liquid-glass.js"></script>
+
+    <!-- Main Application Logic -->
+    <script src="app.js"></script>
+</body>
+
+</html>

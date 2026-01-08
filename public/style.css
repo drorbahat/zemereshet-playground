@@ -1,0 +1,259 @@
+/* --- Liquid Glass v5 Styles --- */
+/* Simplified layout - WebGL handles visual complexity */
+
+:root {
+    --accent-color: #0071e3;
+    --text-primary: #f5f5f7;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Heebo', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0c0c0e;
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 80px;
+}
+
+/* --- Custom Zemereshet Wallpaper --- */
+.bg-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    background: url('wallpaper.png') no-repeat center center;
+    background-size: cover;
+}
+
+.bg-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* --- Typography --- */
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    z-index: 10;
+}
+
+h1 {
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.7));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* --- Repo-Based Structural Styles (glass.css) --- */
+.glass-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 20px;
+    box-sizing: border-box;
+    /* Hybrid Approach: Native CSS Blur */
+    backdrop-filter: blur(40px) saturate(140%);
+    -webkit-backdrop-filter: blur(40px) saturate(140%);
+    background: rgba(255, 255, 255, 0.05);
+    /* Very subtle tint */
+    /* Layered shadow: sharp ambient occlusion + soft bloom */
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.1),
+        0 30px 60px rgba(0, 0, 0, 0.25);
+    /* Ensure WebGL canvas stays behind but visible for surface effects */
+    z-index: 10;
+}
+
+.glass-button {
+    position: relative;
+    cursor: pointer;
+    pointer-events: auto;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+
+    /* Nested glass needs its own blur to stack effectively */
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    background: rgba(255, 255, 255, 0.1);
+
+    /* Subtle button shadow + inner reflection */
+    box-shadow:
+        0 8px 16px rgba(0, 0, 0, 0.15),
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.2);
+    border: 0.5px solid rgba(255, 255, 255, 0.15);
+    /* The "Inner Stroke" */
+}
+
+.glass-button:active {
+    transform: scale(0.98);
+}
+
+.glass-button-text {
+    z-index: 1;
+    pointer-events: none;
+    font-weight: 600;
+    color: white;
+    font-family: 'Heebo', sans-serif;
+    /* font-size set by JS */
+    white-space: nowrap;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    /* Tiny vertical offset for Hebrew visual centering */
+    margin-top: -1px;
+}
+
+/* --- Glass Container (Enhanced by WebGL) --- */
+main {
+    width: 100%;
+    max-width: 800px;
+    padding: 0 24px;
+    z-index: 10;
+}
+
+#glass-mount {
+    width: 100%;
+}
+
+
+.glass-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Add subtle inner reflection for depth */
+.glass-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    /* High-fidelity edge reflection */
+    border: 0.5px solid rgba(255, 255, 255, 0.4);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0));
+    pointer-events: none;
+    z-index: 100;
+    /* Ensure border is always on top */
+}
+
+/* --- Interactive Elements --- */
+.input-group {
+    display: flex;
+    gap: 12px;
+}
+
+input[type="text"] {
+    flex: 1;
+    padding: 20px 24px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    color: white;
+    font-size: 18px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+input[type="text"]::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+input[type="text"]:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* --- Download Button --- */
+.download-btn {
+    width: 100%;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 100px;
+    font-size: 21px;
+    font-weight: 700;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1.2);
+    box-shadow:
+        0 15px 35px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.download-btn:hover {
+    transform: scale(1.02) translateY(-2px);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow:
+        0 25px 50px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.download-btn:active {
+    transform: scale(0.98);
+}
+
+/* --- Console --- */
+.console {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 20px;
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 14px;
+    color: #98c379;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.console-line {
+    padding: 4px 0;
+    opacity: 0.8;
+}
+
+/* --- Glass Button Text (for library) --- */
+.glass-button-text {
+    position: relative;
+    z-index: 2;
+    color: white;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}

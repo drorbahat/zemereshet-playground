@@ -1,0 +1,7 @@
+node_modules/
+downloads/
+.DS_Store
+*.log
+.env
+.password
+public/liquid-glass-*.js
